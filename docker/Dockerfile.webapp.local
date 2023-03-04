@@ -1,0 +1,11 @@
+# Webapp build
+FROM node:lts-alpine as WebAppBuild
+WORKDIR /app
+COPY ../webapp /app
+RUN npm install
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=WebAppBuild /app/dist/webapp /usr/share/nginx/html
+
+EXPOSE 80

@@ -1,0 +1,10 @@
+# Server build
+FROM golang:alpine as ServerBuild
+WORKDIR /app
+COPY ../server /app
+RUN go mod download
+RUN go build -o /server
+
+EXPOSE 80
+
+CMD ["/server"]
