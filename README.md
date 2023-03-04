@@ -18,6 +18,6 @@
 
 Run the below command to publish the local copy to docker containers.
 
-```sh
-$ sudo sh docker/scripts/docker.setup.sh --env=local
+```bash
+sudo sh docker/scripts/docker.setup.sh --env=local
 ```

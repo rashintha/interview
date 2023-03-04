@@ -33,109 +33,25 @@ else
 fi
 
 if [[ -e docker/cfg/${env}.env ]]; then
+  set -a
   source docker/cfg/${env}.env
+  set +a
 else
   echo -e "${ERROR_TEXT} Environment file not found."
   exit 2
 fi
 
-## WebApp -----------------------------------------------------------------------
+echo -e "${INFO_TEXT} Building & Configuring..."
 
-echo -e "${INFO_TEXT} Building the WebApp..."
+docker compose -f ./docker/docker-compose.yaml down
+docker compose -f ./docker/docker-compose.yaml up --build -d
 
-# Remove existing containers
-result=$(docker ps -a -q --filter ancestor=$SRVICE_WEBAPP_INSTANCE:local --format="{{.ID}}")
-
-if [[ ${#result} -ne 0 ]]; then
-  echo -e "${INFO_TEXT} Removing existing containers."
-  result=$(docker rm $(docker stop $(docker ps -a -q --filter ancestor=$SRVICE_WEBAPP_INSTANCE:local --format="{{.ID}}")))
-  status=$?
-
-  if [[ $status -eq 0 ]]; then
-    echo -e "${SUCCESS_TEXT} Containers removed."
-  else
-    echo -e "${ERROR_TEXT} Error in removing containers."
-    exit 2
-  fi
-fi
-
-# Docker build
-echo -e "${INFO_TEXT} Preparing builder..."
-result=$(docker buildx rm --all-inactive --force)
-result=$(docker buildx create --use --name interviewX)
-
-echo -e "${INFO_TEXT} Building..."
-docker buildx build --tag $SRVICE_WEBAPP_INSTANCE:local --file $DOCKER_WEBAPP_FILE --load .
 status=$?
 
-result=$(docker buildx stop interviewX)
-
 if [[ $status -eq 0 ]]; then
-  echo -e "${SUCCESS_TEXT} Building finished."
+  echo -e "${SUCCESS_TEXT} Build success."
 else
   echo -e "${ERROR_TEXT} Error in building."
-  exit 2
-fi
-
-# Creating a new container
-echo -e "${INFO_TEXT} Creating a new container."
-result=$(docker run -d -p $WEBAPP_PORT:80 $SRVICE_WEBAPP_INSTANCE:local)
-status=$?
-
-if [[ $status -eq 0 ]]; then
-  echo -e "${SUCCESS_TEXT} Container ($result) created."
-else
-  echo -e "${ERROR_TEXT} Error in creating container."
-  exit 2
-fi
-
-## Server -----------------------------------------------------------------------
-
-echo -e "${INFO_TEXT} Building the Server..."
-
-# Remove existing containers
-result=$(docker ps -a -q --filter ancestor=$SRVICE_SERVER_INSTANCE:local --format="{{.ID}}")
-
-if [[ ${#result} -ne 0 ]]; then
-  echo -e "${INFO_TEXT} Removing existing containers."
-  result=$(docker rm $(docker stop $(docker ps -a -q --filter ancestor=$SRVICE_SERVER_INSTANCE:local --format="{{.ID}}")))
-  status=$?
-
-  if [[ $status -eq 0 ]]; then
-    echo -e "${SUCCESS_TEXT} Containers removed."
-  else
-    echo -e "${ERROR_TEXT} Error in removing containers."
-    exit 2
-  fi
-fi
-
-# Docker build
-echo -e "${INFO_TEXT} Preparing builder..."
-result=$(docker buildx rm --all-inactive --force)
-result=$(docker buildx create --use --name interviewX)
-
-echo -e "${INFO_TEXT} Building..."
-docker buildx build --tag $SRVICE_SERVER_INSTANCE:local --file $DOCKER_SERVER_FILE --load .
-status=$?
-
-result=$(docker buildx stop interviewX)
-
-if [[ $status -eq 0 ]]; then
-  echo -e "${SUCCESS_TEXT} Building finished."
-else
-  echo -e "${ERROR_TEXT} Error in building."
-  exit 2
-fi
-
-# Creating a new container
-echo -e "${INFO_TEXT} Creating a new container."
-result=$(docker run -d -p $SERVER_PORT:80 $SRVICE_SERVER_INSTANCE:local)
-status=$?
-
-if [[ $status -eq 0 ]]; then
-  echo -e "${SUCCESS_TEXT} Container ($result) created."
-else
-  echo -e "${ERROR_TEXT} Error in creating container."
   exit 2
 fi
 

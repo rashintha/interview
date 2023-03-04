@@ -1,1 +1,3 @@
 server
+.env
+log/log
