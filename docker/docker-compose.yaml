@@ -1,21 +1,63 @@
 version: '3'
 
 services:
+  ingress:
+    container_name: ${SERVICE_INGRESS_INSTANCE}
+    image: traefik:latest
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.mongo.address=:27017"
+    ports:
+      - "8080:8080"
+      - "80:80"
+      - "27017:27017"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - interview-network
   webapp:
     container_name: ${SRVICE_WEBAPP_INSTANCE}
     image: "${SRVICE_WEBAPP_INSTANCE}:${IMAGE_TAG}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webapp.rule=Host(`webapp.localhost`)"
+      - "traefik.http.routers.webapp.entrypoints=web"
     build:
       context: ../
       dockerfile: ${DOCKER_WEBAPP_FILE}
-    ports:
-      - "${WEBAPP_PORT}:80"
     restart: unless-stopped
+    networks:
+      - interview-network
   server:
     container_name: ${SRVICE_SERVER_INSTANCE}
     image: "${SRVICE_SERVER_INSTANCE}:${IMAGE_TAG}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`server.localhost`)"
+      - "traefik.http.routers.server.entrypoints=web"
     build:
       context: ../
       dockerfile: ${DOCKER_SERVER_FILE}
-    ports:
-      - "${SERVER_PORT}:3000"
     restart: unless-stopped
+    networks:
+      - interview-network
+  mongo:
+    container_name: ${SRVICE_DB_INSTANCE}
+    image: mongo:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.mongo.rule=ClientIP(`0.0.0.0/0`)"
+      - "traefik.tcp.routers.mongo.tls=false"
+      - "traefik.tcp.routers.mongo.entrypoints=mongo"
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASS}
+    networks:
+      - interview-network
+
+networks:
+  interview-network:
+    name: interview-network
