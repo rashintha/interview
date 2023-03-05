@@ -2,6 +2,7 @@
 
 ##### Server
 ![Go](https://img.shields.io/badge/GO-00ADD8?logo=go&logoColor=white&style=for-the-badge)
+![MongoDB](https://img.shields.io/badge/MongoDB-001e2b?logo=mongodb&logoColor=00ed64&style=for-the-badge)
 
 ##### WebApp
 ![Angular](https://img.shields.io/badge/Angular-DD0031?logo=angular&logoColor=white&style=for-the-badge)
